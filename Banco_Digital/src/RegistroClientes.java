@@ -17,13 +17,13 @@ public class RegistroClientes {
     private JTable TablaClientes;
 
     public RegistroClientes() {
-        TablaClientes.setRowHeight(24);
+        TablaClientes.setRowHeight(25);
     }
     public void ajustarAnchoColumnas(JTable tabla) {
         final javax.swing.table.TableColumnModel columnModel = tabla.getColumnModel();
 
         for (int columna = 0; columna < tabla.getColumnCount(); columna++) {
-            int anchoColumna = 50; // ancho mínimo
+            int anchoColumna = 200; // ancho mínimo
             javax.swing.table.TableColumn columnaTabla = columnModel.getColumn(columna);
 
             // Ancho del header
