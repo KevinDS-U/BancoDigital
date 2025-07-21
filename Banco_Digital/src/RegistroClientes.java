@@ -51,21 +51,25 @@ public class RegistroClientes {
     }
     public void cargarClientsData(){
         DefaultTableModel model = new DefaultTableModel();
-        model.addColumn("ID_Materia");
-        model.addColumn("Materias");
-        model.addColumn("Creditos");
-        model.addColumn("Notas");
-        String sql = "SELECT idMater ,Materias , Creditos , Nota From Materias";
+        model.addColumn("ID_Cliente");
+        model.addColumn("Nombre");
+        model.addColumn("Correo");
+        model.addColumn("Direccion");
+        model.addColumn("Pais");
+        model.addColumn("Telefono");
+        String sql = "SELECT cliente_id ,nombre ,correo, Direccion , Pais, Telefono From Cliente";
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Object[] fila = new Object[4];
-                fila[0] = rs.getString("idMater");
-                fila[1] = rs.getString("materias");
-                fila[2] = rs.getString("creditos");
-                fila[3] = rs.getString("nota");
+                Object[] fila = new Object[6];
+                fila[0] = rs.getString("cliente_id");
+                fila[1] = rs.getString("nombre");
+                fila[2] = rs.getString("correo");
+                fila[3] = rs.getString("Direccion");
+                fila[4] = rs.getString("Pais");
+                fila[5] = rs.getString("Telefono");
 
                 model.addRow(fila);  // Agregar la fila al modelo
             }
