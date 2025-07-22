@@ -5,7 +5,12 @@
     <constraints>
       <xy x="20" y="20" width="1022" height="570"/>
     </constraints>
-    <properties/>
+    <properties>
+      <alignmentX value="0.5"/>
+      <alignmentY value="0.5"/>
+      <debugGraphicsOptions value="6"/>
+      <focusCycleRoot value="false"/>
+    </properties>
     <border type="none" title=""/>
     <children>
       <grid id="9b9e5" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
