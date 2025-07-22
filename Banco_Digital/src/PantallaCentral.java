@@ -1,9 +1,10 @@
 import javax.swing.*;
 
-public class PanelCentral {
+public class PantallaCentral {
     private JTable Cuentas;
     private JLabel clientenom;
     private JLabel Saludo;
     private JLabel inicio;
-    private JLabel icoinc;
+    private JPanel Pricipal;
+    private JPanel pe;
 }
