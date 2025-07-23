@@ -5,7 +5,7 @@
 
 -- Crea esta ruta, con el proposito de estandarizar la creacion y uso de esta BD.
 -- Ejemplo: " C:\ProyectoFinal\BD\ "
--- Aseg˙rate de que la carpeta exista y SQL Server tenga permiso de escritura.
+-- Aseg√∫rate de que la carpeta exista y SQL Server tenga permiso de escritura.
 
 CREATE DATABASE BANCO_DIGITAL
 ON PRIMARY
@@ -26,7 +26,7 @@ LOG ON
 );
 GO
 
--- Usar la base de datos reciÈn creada
+-- Usar la base de datos reci√©n creada
 USE BANCO_DIGITAL;
 GO
 
@@ -54,8 +54,6 @@ CREATE TABLE Cliente (
 );
 GO
 
-SELECT * FROM Cliente
-
 CREATE TABLE Usuario (
     usuario_id INT IDENTITY(1,1) PRIMARY KEY,
     cliente_id INT FOREIGN KEY REFERENCES Cliente(cliente_id),
@@ -74,14 +72,35 @@ CREATE TABLE TipoCuenta (
 GO
 
 CREATE TABLE Cuenta (
-    cuenta_id INT IDENTITY(1,1) PRIMARY KEY,
+    cuenta_id INT PRIMARY KEY IDENTITY(1,1),
     cliente_id INT FOREIGN KEY REFERENCES Cliente(cliente_id),
     tipo_cuenta_id INT FOREIGN KEY REFERENCES TipoCuenta(tipo_cuenta_id),
-    numero_cuenta NVARCHAR(20) UNIQUE NOT NULL,
-    saldo DECIMAL(18,2) NOT NULL,
+    numero_cuenta NVARCHAR(20) UNIQUE NOT NULL DEFAULT 'PENDIENTE',
+    saldo DECIMAL(18,2) DEFAULT 0,
     activa BIT DEFAULT 1
 );
 GO
+
+-- Trigger para generar automaticamente el numero de cuenta
+CREATE TRIGGER trg_GenerarNumeroCuenta
+ON Cuenta
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE c
+    SET numero_cuenta = 
+        RIGHT('00000' + CAST(10000 + i.cliente_id AS NVARCHAR), 5) +
+        RIGHT('0' + CAST(i.tipo_cuenta_id AS NVARCHAR), 2)
+    FROM Cuenta c
+    INNER JOIN inserted i ON c.cuenta_id = i.cuenta_id;
+END;
+GO
+
+-- Indice filtrado para asegurar la insercion de varias cuentas sin problema
+CREATE UNIQUE INDEX IX_Cuenta_numero_cuenta ON Cuenta(numero_cuenta)
+WHERE numero_cuenta <> 'PENDIENTE';
 
 CREATE TABLE Transaccion (
     transaccion_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -106,11 +125,11 @@ GO
 -- INSERCION DE DATOS
 -- =============================================
 INSERT INTO Cliente (nombre, correo, direccion, pais, telefono) VALUES
-('Juan Perez', 'juan.perez@email.com', 'Paitilla', 'Panam·', '6626-3120'),
-('MarÌa GÛmez', 'maria.gomez@email.com', 'Albrook', 'Panam·', '6789-1234'),
-('Carlos RodrÌguez', 'carlos.rod@email.com', 'Bella Vista', 'Panam·', '6123-4567'),
-('Ana Torres', 'ana.torres@email.com', 'San Miguelito', 'Panam·', '6900-1122'),
-('Luis Moreno', 'luis.moreno@email.com', 'Brisas del Golf', 'Panam·', '6555-6677');
+('Juan Perez', 'juan.perez@email.com', 'Paitilla', 'Panam√°', '6626-3120'),
+('Mar√≠a G√≥mez', 'maria.gomez@email.com', 'Albrook', 'Panam√°', '6789-1234'),
+('Carlos Rodr√≠guez', 'carlos.rod@email.com', 'Bella Vista', 'Panam√°', '6123-4567'),
+('Ana Torres', 'ana.torres@email.com', 'San Miguelito', 'Panam√°', '6900-1122'),
+('Luis Moreno', 'luis.moreno@email.com', 'Brisas del Golf', 'Panam√°', '6555-6677');
 GO
 SELECT * FROM Cliente;
 PRINT 'Base BANCO_DIGITAL creada con archivos en Proyecto Final/BD.';
@@ -118,40 +137,30 @@ PRINT 'Base BANCO_DIGITAL creada con archivos en Proyecto Final/BD.';
 INSERT INTO TipoCuenta (descripcion) VALUES
 ('Ahorro'),
 ('Corriente'),
-('Tarjeta de CrÈdito'),
-('Tarjeta de DÈbito');
+('Tarjeta de Cr√©dito'),
+('Tarjeta de D√©bito');
 GO
 SELECT * FROM TipoCuenta
 
+-- =============================================
 -- INSERCIONES DE PRUEBA
+-- =============================================
 
-INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, numero_cuenta, saldo)
-VALUES 
-(1, 1, '100001', 1000.00),
-(2, 2, '100002', 2500.00),
-(3, 1, '100003', 500.00),
-(4, 3, '100004', 1200.00),
-(5, 4, '100005', 750.00);
-GO
+--DBCC CHECKIDENT ('Cuenta', RESEED, 0);
+
+INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, saldo) VALUES
+(1, 1, 1000.00);
+INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, saldo) VALUES
+(2, 1, 100.00);
 SELECT * FROM Cuenta
 
 INSERT INTO Transaccion (tipo, monto, descripcion)
-VALUES ('Transferencia', 100.00, 'Transferencia entre cuentas'),
-('Transferencia', 500.00, 'Transferencia entre cuentas');
+VALUES ('Transferencia', 150.00, 'Pago de prueba');
 SELECT * FROM Transaccion
 
--- Insertar movimientos
--- Juan debita 100 de cuenta 1 a cuenta 2
 INSERT INTO Movimiento (cuenta_id, monto_debito, monto_credito, transaccion_id)
-VALUES 
-(1, 100.00, 0.00, 1),  -- DÈbito a cuenta 1
-(2, 0.00, 100.00, 1);  -- CrÈdito a cuenta 2
-SELECT * FROM Movimiento
-
--- Carlos debita 100 de cuenta 1 a cuenta 2
-INSERT INTO Movimiento (cuenta_id, monto_debito, monto_credito, transaccion_id)
-VALUES 
-(3, 400.00, 0.00, 2);  -- DÈbito a cuenta 3
+VALUES (3, 150.00, 0.00, 1),
+       (4, 0.00, 150.00, 1);
 SELECT * FROM Movimiento
 
 -- =============================================
@@ -184,4 +193,3 @@ END
 
 
 EXEC sp_HistorialMovimientosPorCliente @cliente_id = 1;
-
