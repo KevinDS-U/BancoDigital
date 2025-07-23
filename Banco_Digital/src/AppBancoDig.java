@@ -4,7 +4,7 @@ public static void main(String[] args) {
     SwingUtilities.invokeLater(() -> {
         JFrame frame = new JFrame("Reportes Clientes ");
         RegistroClientes rc = new RegistroClientes();
-        frame.setContentPane(rc.getPanel()); // ← asumiendo método getPanel()
+        frame.setContentPane(rc.getPanel()); // ← asumiendo metodo getPanel()
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.pack();
