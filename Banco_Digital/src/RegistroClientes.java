@@ -15,9 +15,13 @@ public class RegistroClientes {
     private JButton INSERTARButton;
     private JTextField textField6;
     private JTable TablaClientes;
-
     public RegistroClientes() {
         TablaClientes.setRowHeight(25);
+
+        // Asociar eventos a botones
+        INSERTARButton.addActionListener(e -> insertarCliente());
+        eliminarButton.addActionListener(e -> eliminarCliente());
+        ACTUALIZARButton.addActionListener(e -> actualizarCliente());
     }
     public void ajustarAnchoColumnas(JTable tabla) {
         final javax.swing.table.TableColumnModel columnModel = tabla.getColumnModel();
@@ -89,4 +93,120 @@ public class RegistroClientes {
     public JPanel getPanel() {
         return Panel;
     }
+
+    // Inserta un nuevo cliente en la base de datos
+    private void insertarCliente() {
+        String nombre = textField1.getText();
+        String correo = textField2.getText();
+        String direccion = textField3.getText();
+        String pais = textField4.getText();
+        String telefono = textField5.getText();
+
+        String sql = "INSERT INTO Cliente (nombre, correo, Direccion, Pais, Telefono) VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, correo);
+            pstmt.setString(3, direccion);
+            pstmt.setString(4, pais);
+            pstmt.setString(5, telefono);
+
+            int filas = pstmt.executeUpdate();
+            if (filas > 0) {
+                JOptionPane.showMessageDialog(null, "Cliente insertado correctamente.");
+                cargarClientsData();
+                limpiarCampos();
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al insertar cliente: " + ex.getMessage());
+        }
+    }
+
+    // Elimina un cliente por ID
+    private void eliminarCliente() {
+        String id = textField6.getText();
+
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingrese el ID del cliente a eliminar.");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(null, "¿Eliminar cliente con ID: " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        String sql = "DELETE FROM Cliente WHERE cliente_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, id);
+            int filas = pstmt.executeUpdate();
+
+            if (filas > 0) {
+                JOptionPane.showMessageDialog(null, "Cliente eliminado correctamente.");
+                cargarClientsData();
+                limpiarCampos();
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el cliente.");
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al eliminar cliente: " + ex.getMessage());
+        }
+    }
+
+    // Actualiza los datos de un cliente por su ID
+    private void actualizarCliente() {
+        String id = textField6.getText();
+        String nombre = textField1.getText();
+        String correo = textField2.getText();
+        String direccion = textField3.getText();
+        String pais = textField4.getText();
+        String telefono = textField5.getText();
+
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Ingrese el ID del cliente a actualizar.");
+            return;
+        }
+
+        String sql = "UPDATE Cliente SET nombre = ?, correo = ?, Direccion = ?, Pais = ?, Telefono = ? WHERE cliente_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, correo);
+            pstmt.setString(3, direccion);
+            pstmt.setString(4, pais);
+            pstmt.setString(5, telefono);
+            pstmt.setString(6, id);  // Faltaba este parámetro en tu versión original
+
+            int filas = pstmt.executeUpdate();
+
+            if (filas > 0) {
+                JOptionPane.showMessageDialog(null, "Cliente actualizado correctamente.");
+                cargarClientsData();
+                limpiarCampos();
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el cliente.");
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error al actualizar cliente: " + ex.getMessage());
+        }
+    }
+
+    // Limpia todos los campos del formulario
+    private void limpiarCampos() {
+        textField1.setText("");
+        textField2.setText("");
+        textField3.setText("");
+        textField4.setText("");
+        textField5.setText("");
+        textField6.setText(""); // ID también
+    }
 }
+
