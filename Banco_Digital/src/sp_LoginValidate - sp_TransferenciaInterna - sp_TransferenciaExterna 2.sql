@@ -74,7 +74,6 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRANSACTION;
-
     BEGIN TRY
         -- Verificar fondos
         IF (SELECT saldo FROM Cuentas WHERE id_cuenta = @cuentaOrigen) < @monto
@@ -107,7 +106,6 @@ GO
 
 CREATE PROCEDURE sp_TransferenciaExterna
     @cuentaOrigen INT,
-    @bancoDestino VARCHAR(100),
     @cuentaDestinoExterna VARCHAR(50),
     @monto DECIMAL(18,2)
 AS
@@ -130,7 +128,6 @@ BEGIN
         -- Registrar transferencia externa
         INSERT INTO HistorialTransferencias (
             cuenta_origen,
-            banco_destino,
             cuenta_destino,
             monto,
             fecha,
@@ -138,7 +135,6 @@ BEGIN
         )
         VALUES (
             @cuentaOrigen,
-            @bancoDestino,
             @cuentaDestinoExterna,
             @monto,
             GETDATE(),
