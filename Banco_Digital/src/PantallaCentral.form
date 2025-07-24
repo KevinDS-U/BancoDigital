@@ -9,6 +9,7 @@
       <alignmentX value="0.5"/>
       <alignmentY value="0.5"/>
       <debugGraphicsOptions value="6"/>
+      <enabled value="false"/>
       <focusCycleRoot value="false"/>
     </properties>
     <border type="none" title=""/>
