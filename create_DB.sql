@@ -104,6 +104,8 @@ WHERE numero_cuenta <> 'PENDIENTE';
 
 CREATE TABLE Transaccion (
     transaccion_id INT IDENTITY(1,1) PRIMARY KEY,
+    cuenta_origen_id INT NULL FOREIGN KEY REFERENCES Cuenta(cuenta_id),
+    cuenta_destino_id INT NULL FOREIGN KEY REFERENCES Cuenta(cuenta_id),
     fecha DATETIME DEFAULT GETDATE(),
     tipo NVARCHAR(50) NOT NULL,
     monto DECIMAL(18,2) NOT NULL,
@@ -147,25 +149,71 @@ SELECT * FROM TipoCuenta
 -- =============================================
 
 --DBCC CHECKIDENT ('Cuenta', RESEED, 0);
-
+-- Se inserta a Juan
 INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, saldo) VALUES
 (1, 1, 1000.00);
+-- Se inserta a Maria
 INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, saldo) VALUES
 (2, 1, 100.00);
 SELECT * FROM Cuenta
 
-INSERT INTO Transaccion (tipo, monto, descripcion)
-VALUES ('Transferencia', 150.00, 'Pago de prueba');
-SELECT * FROM Transaccion
+-- Se inserta a Ana
+INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, saldo) VALUES
+(4, 1, 50.00);
+-- Se inserta a Luis
+INSERT INTO Cuenta (cliente_id, tipo_cuenta_id, saldo) VALUES
+(5, 1, 0.00);
+SELECT * FROM Cuenta
 
-INSERT INTO Movimiento (cuenta_id, monto_debito, monto_credito, transaccion_id)
-VALUES (3, 150.00, 0.00, 1),
-       (4, 0.00, 150.00, 1);
-SELECT * FROM Movimiento
+-- Transferencia de Juan a Maria
+EXEC sp_Transferencia 
+    @cuenta_origen = 1,
+    @cuenta_destino = 2,
+    @monto = 100.00,
+    @descripcion = 'Pago de servicios';
+
+-- Transferencia Ana a Luis
+EXEC sp_Transferencia 
+    @cuenta_origen = 3,
+    @cuenta_destino = 4,
+    @monto = 25.00,
+    @descripcion = 'Pago de servicios Y S.A';
+
+SELECT * FROM Transaccion;
+SELECT * FROM Movimiento;
 
 -- =============================================
 -- PROCEDIMIENTOS ALMACENADOS
 -- =============================================
+
+CREATE PROCEDURE sp_Transferencia
+    @cuenta_origen INT,
+    @cuenta_destino INT,
+    @monto DECIMAL(18,2),
+    @descripcion NVARCHAR(255)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @trans_id INT;
+
+    -- 1. Registrar la transacción
+    INSERT INTO Transaccion (tipo, monto, descripcion, cuenta_origen_id, cuenta_destino_id)
+    VALUES ('Transferencia', @monto, @descripcion, @cuenta_origen, @cuenta_destino);
+
+    SET @trans_id = SCOPE_IDENTITY();
+
+    -- 2. Insertar los movimientos
+    INSERT INTO Movimiento (cuenta_id, monto_debito, monto_credito, transaccion_id)
+    VALUES 
+    (@cuenta_origen, @monto, 0.00, @trans_id),
+    (@cuenta_destino, 0.00, @monto, @trans_id);
+
+    -- 3. Actualizar saldos en Cuenta
+    UPDATE Cuenta SET saldo = saldo - @monto WHERE cuenta_id = @cuenta_origen;
+    UPDATE Cuenta SET saldo = saldo + @monto WHERE cuenta_id = @cuenta_destino;
+END;
+
 
 CREATE PROCEDURE sp_HistorialMovimientosPorCliente
     @cliente_id INT
@@ -174,22 +222,45 @@ BEGIN
     SELECT 
         cl.cliente_id,
         cl.nombre AS nombre_cliente,
-        cu.cuenta_id,
+        cu.cuenta_id AS cuenta_origen,
         cu.saldo,
         t.transaccion_id,
         t.fecha,
         t.tipo,
         t.monto,
         t.descripcion,
+        t.cuenta_destino_id,
+        cu_dest.numero_cuenta AS cuenta_destino_numero,
         m.monto_debito,
         m.monto_credito
     FROM Movimiento m
     JOIN Cuenta cu ON m.cuenta_id = cu.cuenta_id
     JOIN Cliente cl ON cu.cliente_id = cl.cliente_id
     JOIN Transaccion t ON m.transaccion_id = t.transaccion_id
+    LEFT JOIN Cuenta cu_dest ON t.cuenta_destino_id = cu_dest.cuenta_id
     WHERE cl.cliente_id = @cliente_id
     ORDER BY t.fecha DESC;
-END
+END;
 
+EXEC sp_HistorialMovimientosPorCliente @cliente_id = 4;
 
-EXEC sp_HistorialMovimientosPorCliente @cliente_id = 1;
+CREATE or ALTER VIEW vw_MovimientosDelDia AS
+SELECT 
+    m.movimiento_id,
+    c.cliente_id,
+    cl.nombre AS nombre_cliente,
+    c.numero_cuenta,
+    t.tipo AS tipo_transaccion,
+    t.descripcion,
+    t.monto AS monto_total_transaccion,
+    m.monto_debito,
+    m.monto_credito,
+    m.fecha AS fecha_movimiento
+FROM Movimiento m
+JOIN Cuenta c ON m.cuenta_id = c.cuenta_id
+JOIN Cliente cl ON c.cliente_id = cl.cliente_id
+JOIN Transaccion t ON m.transaccion_id = t.transaccion_id
+WHERE 
+    CONVERT(DATE, m.fecha) = CONVERT(DATE, GETDATE())
+
+SELECT * FROM vw_MovimientosDelDia;
