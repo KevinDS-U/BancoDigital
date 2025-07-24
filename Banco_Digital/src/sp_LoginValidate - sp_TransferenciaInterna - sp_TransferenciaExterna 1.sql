@@ -1,18 +1,68 @@
 CREATE PROCEDURE sp_LoginValidate
-    @username VARCHAR(50),
-    @passwordHash VARCHAR(64)
+    @username NVARCHAR(50),
+    @password NVARCHAR(100)
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF EXISTS (
-        SELECT 1
-        FROM Cuentas
-        WHERE username = @username AND password_hash = @passwordHash
-    )
-        SELECT 'Login exitoso' AS Resultado;
+    DECLARE 
+        @storedHash VARBINARY(64),
+        @storedSalt NVARCHAR(32),
+        @intentos INT,
+        @bloqueado BIT,
+        @calculatedHash VARBINARY(64);
+
+    -- Verifica si el usuario existe
+    IF NOT EXISTS (SELECT 1 FROM Usuario WHERE username = @username)
+    BEGIN
+        SELECT 'Este usuario no está registrado en el sistema.' AS Mensaje;
+        RETURN;
+    END
+
+    -- Obtiene los datos del usuario
+    SELECT 
+        @storedHash = password_hash,
+        @storedSalt = salt,
+        @intentos = intentos_fallidos,
+        @bloqueado = bloqueado
+    FROM Usuario
+    WHERE username = @username;
+
+    -- Si el usuario ya está bloqueado
+    IF @bloqueado = 1
+    BEGIN
+        SELECT 'Tu cuenta está bloqueada por múltiples intentos fallidos. Por favor, contacta con soporte.' AS Mensaje;
+        RETURN;
+    END
+
+    -- Calcula el hash con la contraseña ingresada y el salt guardado
+    SET @calculatedHash = HASHBYTES('SHA2_256', CONVERT(VARBINARY(MAX), @password + @storedSalt));
+
+    -- Compara los hashes
+    IF @calculatedHash = @storedHash
+    BEGIN
+        -- Restablece intentos si la contraseña es correcta
+        UPDATE Usuario
+        SET intentos_fallidos = 0
+        WHERE username = @username;
+
+        SELECT '¡Bienvenido! Has iniciado sesión correctamente.' AS Mensaje;
+    END
     ELSE
-        SELECT 'Usuario o contraseña incorrectos' AS Resultado;
+    BEGIN
+        -- Aumenta el contador de intentos
+        SET @intentos = @intentos + 1;
+
+        UPDATE Usuario
+        SET intentos_fallidos = @intentos,
+            bloqueado = CASE WHEN @intentos >= 3 THEN 1 ELSE 0 END
+        WHERE username = @username;
+
+        IF @intentos >= 3
+            SELECT 'Has excedido el número de intentos permitidos. Tu cuenta ha sido bloqueada.' AS Mensaje;
+        ELSE
+            SELECT 'La contraseña ingresada es incorrecta. Inténtalo nuevamente.' AS Mensaje;
+    END
 END;
 GO
 
