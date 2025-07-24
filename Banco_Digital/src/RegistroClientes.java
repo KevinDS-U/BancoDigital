@@ -6,10 +6,10 @@ import java.awt.*;
 public class RegistroClientes {
     private JPanel Panel;
     private JTextField textField1; // Nombre
-    private JTextField textField2; // Correo
-    private JTextField textField3; // Dirección
-    private JTextField textField4; // País
-    private JTextField textField5; // Teléfono
+    private JTextField textField2; // Telefono
+    private JTextField textField3; // Pais
+    private JTextField textField4; // Correo
+    private JTextField textField5; // Direccion
     private JButton eliminarButton;
     private JButton ACTUALIZARButton;
     private JButton INSERTARButton;
@@ -103,10 +103,10 @@ public class RegistroClientes {
     // Inserta un nuevo cliente en la base de datos
     private void insertarCliente() {
         String nombre = textField1.getText();
-        String correo = textField2.getText();
-        String direccion = textField3.getText();
-        String pais = textField4.getText();
-        String telefono = textField5.getText();
+        String correo = textField4.getText();
+        String direccion = textField5.getText();
+        String pais = textField3.getText();
+        String telefono = textField2.getText();
 
         String sql = "INSERT INTO Cliente (nombre, correo, Direccion, Pais, Telefono) VALUES (?, ?, ?, ?, ?)";
 
@@ -166,44 +166,63 @@ public class RegistroClientes {
 
     // Actualiza los datos de un cliente por su ID
     private void actualizarCliente() {
-        String id = textField6.getText();
-        String nombre = textField1.getText();
-        String correo = textField2.getText();
-        String direccion = textField3.getText();
-        String pais = textField4.getText();
-        String telefono = textField5.getText();
-
+        String id = textField6.getText().trim();
         if (id.isEmpty()) {
             JOptionPane.showMessageDialog(null, "Ingrese el ID del cliente a actualizar.");
             return;
         }
 
-        String sql = "UPDATE Cliente SET nombre = ?, correo = ?, Direccion = ?, Pais = ?, Telefono = ? WHERE cliente_id = ?";
+        String nombre = textField1.getText().trim();
+        String correo = textField4.getText().trim();
+        String direccion = textField5.getText().trim();
+        String pais = textField3.getText().trim();
+        String telefono = textField2.getText().trim();
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DBConnection.getConnection()) {
 
-            pstmt.setString(1, nombre);
-            pstmt.setString(2, correo);
-            pstmt.setString(3, direccion);
-            pstmt.setString(4, pais);
-            pstmt.setString(5, telefono);
-            pstmt.setString(6, id);  // Faltaba este parámetro en tu versión original
+            // 1. Obtener valores actuales
+            String selectSQL = "SELECT * FROM Cliente WHERE cliente_id = ?";
+            PreparedStatement selectStmt = conn.prepareStatement(selectSQL);
+            selectStmt.setString(1, id);
+            ResultSet rs = selectStmt.executeQuery();
 
-            int filas = pstmt.executeUpdate();
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(null, "No se encontró el cliente.");
+                return;
+            }
+
+            // 2. Reemplazar solo lo que el usuario ingresó
+            if (nombre.isEmpty()) nombre = rs.getString("nombre");
+            if (correo.isEmpty()) correo = rs.getString("correo");
+            if (direccion.isEmpty()) direccion = rs.getString("Direccion");
+            if (pais.isEmpty()) pais = rs.getString("Pais");
+            if (telefono.isEmpty()) telefono = rs.getString("Telefono");
+
+            // 3. Ejecutar actualización con datos combinados
+            String updateSQL = "UPDATE Cliente SET nombre = ?, correo = ?, Direccion = ?, Pais = ?, Telefono = ? WHERE cliente_id = ?";
+            PreparedStatement updateStmt = conn.prepareStatement(updateSQL);
+            updateStmt.setString(1, nombre);
+            updateStmt.setString(2, correo);
+            updateStmt.setString(3, direccion);
+            updateStmt.setString(4, pais);
+            updateStmt.setString(5, telefono);
+            updateStmt.setString(6, id);
+
+            int filas = updateStmt.executeUpdate();
 
             if (filas > 0) {
                 JOptionPane.showMessageDialog(null, "Cliente actualizado correctamente.");
                 cargarClientsData();
                 limpiarCampos();
             } else {
-                JOptionPane.showMessageDialog(null, "No se encontró el cliente.");
+                JOptionPane.showMessageDialog(null, "No se pudo actualizar el cliente.");
             }
 
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Error al actualizar cliente: " + ex.getMessage());
         }
     }
+
 
     // Limpia todos los campos del formulario
     private void limpiarCampos() {
