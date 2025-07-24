@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.sql.PreparedStatement;
 public class TransferCuenta {
     private JPanel TRANFER;
     private JComboBox<String> TipoTrans;
@@ -134,27 +135,27 @@ public class TransferCuenta {
         comboBox2.removeAllItems();
 
         // TODO: conecta a tu BD y carga las cuentas aquí, por ejemplo:
-        /*
-        try (Connection conn = DriverManager.getConnection("jdbc:tu_driver:tu_bd_url", "usuario", "password");
+
+        try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT numero_cuenta FROM Cuentas WHERE cliente_id = ?")) {
+             ResultSet rs = stmt.executeQuery("SELECT cuenta_id FROM Cuentas WHERE cliente_id = ?")) {
 
              while (rs.next()) {
-                 String cuenta = rs.getString("numero_cuenta");
+                 String cuenta = rs.getString("cuenta_id");
                  comboBox1.addItem(cuenta);
                  comboBox2.addItem(cuenta);
              }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error cargando cuentas: " + e.getMessage());
         }
-        */
+
     }
 
     private void cargarSaldoCuenta(String cuenta) {
         // TODO: conecta a BD y consulta saldo de la cuenta para mostrar
-        /*
-        try (Connection conn = DriverManager.getConnection("jdbc:tu_driver:tu_bd_url", "usuario", "password");
-             PreparedStatement ps = conn.prepareStatement("SELECT saldo FROM Cuentas WHERE numero_cuenta = ?")) {
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT saldo FROM Cuentas WHERE cuenta_id = ?")) {
             ps.setString(1, cuenta);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -167,7 +168,7 @@ public class TransferCuenta {
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Error cargando saldo: " + e.getMessage());
         }
-        */
+
         saldorigen.setText("");  // Por defecto vacío mientras implementas
     }
 
