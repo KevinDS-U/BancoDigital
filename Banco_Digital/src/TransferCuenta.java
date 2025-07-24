@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.sql.*;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.List;
+
 public class TransferCuenta {
     private JPanel TRANFER;
     private JComboBox<String> TipoTrans;
@@ -15,15 +18,19 @@ public class TransferCuenta {
     private JLabel labelmonto;
     private JTextField saldorigen;
     private JLabel NumCuentads;
-    private JTextField numcd;             // Número cuenta destino (terceros)
+    private JTextField numcd;
+    private int cliente_id;// Número cuenta destino
     private JButton enviarBoton;
+    private JLabel saldd;
+
     private void createUIComponents() {
         saldorigen = new JTextField();
         saldorigen.setEditable(false);  // Ejemplo: solo lectura
         saldorigen.setBackground(new java.awt.Color(240, 240, 240)); // Color claro
     }
-    public TransferCuenta() {
-        cargarCuentas();      // Implementa conexión y carga real
+    public TransferCuenta(int cliente_id) {
+        this.cliente_id=cliente_id;
+        cargarCuentasDeCliente(cliente_id);      // Implementa conexión y carga real
         mostrarCamposIniciales();
 
         TipoTrans.addActionListener(new ActionListener() {
@@ -45,17 +52,23 @@ public class TransferCuenta {
             }
         });
 
-        comboBox1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String cuenta = (String) comboBox1.getSelectedItem();
-                if (cuenta != null) {
-                    cargarSaldoCuenta(cuenta);  // Implementa conexión y consulta real
-                } else {
-                    saldorigen.setText("");
-                }
-            }
-        });
+              comboBox1.addActionListener(new ActionListener() {
+                  @Override
+                  public void actionPerformed(ActionEvent e) {
+                      String cuentaStr = (String) comboBox1.getSelectedItem();
+
+                      if (cuentaStr != null) {
+                          try {
+                              int cuentaId = Integer.parseInt(cuentaStr);  // convierte a int
+                              cargarSaldoCuenta(cuentaId);  // ahora llamamos con int
+                          } catch (NumberFormatException ex) {
+                              JOptionPane.showMessageDialog(null, "Cuenta inválida: " + ex.getMessage());
+                          }
+                      } else {
+                          saldorigen.setText("");
+                      }
+                  }
+              });
 
         enviarBoton.addActionListener(new ActionListener() {
             @Override
@@ -94,32 +107,71 @@ public class TransferCuenta {
     }
 
     private void mostrarCamposIniciales() {
-        comboBox1.setVisible(true);
-        origen.setVisible(true);
-        saldorigen.setVisible(true);
+        comboBox1.setVisible(false);
+        origen.setVisible(false);
+        saldorigen.setVisible(false);
 
         comboBox2.setVisible(false);
         Destino.setVisible(false);
         numcd.setVisible(false);
         NumCuentads.setVisible(false);
 
-        labelmonto.setVisible(true);
-        monto.setVisible(true);
+        labelmonto.setVisible(false);
+        monto.setVisible(false);
+        saldd.setVisible(false);
+        enviarBoton.setVisible(false);
     }
 
     private void mostrarEntreMisCuentas() {
+        comboBox1.setVisible(true);
         comboBox2.setVisible(true);
+        origen.setVisible(true);
         Destino.setVisible(true);
         numcd.setVisible(false);
+        saldorigen.setVisible(true);
         NumCuentads.setVisible(false);
+        saldd.setVisible(true);
+        labelmonto.setVisible(true);
+        monto.setVisible(true);
+        enviarBoton.setVisible(true);
+        cargarCuentasSoloOrigen(cliente_id); 
     }
 
     private void mostrarATerceros() {
         comboBox2.setVisible(false);
         Destino.setVisible(false);
         numcd.setVisible(true);
+        origen.setVisible(true);
         NumCuentads.setVisible(true);
+        cargarCuentasSoloOrigen(cliente_id);
+        comboBox1.setVisible(true);
+        saldorigen.setVisible(true);
+        saldd.setVisible(true);
+        labelmonto.setVisible(true);
+        monto.setVisible(true);
+        enviarBoton.setVisible(true);
+        cargarCuentasSoloOrigen(cliente_id);
     }
+
+
+
+    private void cargarCuentasSoloOrigen(int cliente_id) {
+           comboBox1.removeAllItems();  // Limpiar primero
+
+           String query = "SELECT numero_cuenta FROM Cuenta WHERE cliente_id = ?";
+           try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(query)) {
+
+               ps.setInt(1, cliente_id);
+               ResultSet rs = ps.executeQuery();
+               while (rs.next()) {
+                   String numeroCuenta = rs.getString("numero_cuenta");
+                   comboBox1.addItem(numeroCuenta);  // Agregas solo cuenta de origen
+               }
+
+           } catch (SQLException e) {
+               JOptionPane.showMessageDialog(null, "Error cargando cuentas: " + e.getMessage());
+    }      }
 
     private void limpiarCampos() {
         monto.setText("");
@@ -138,7 +190,7 @@ public class TransferCuenta {
 
         try (Connection conn = DBConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT cuenta_id FROM Cuentas WHERE cliente_id = ?")) {
+             ResultSet rs = stmt.executeQuery("SELECT cuenta_id FROM Cuenta WHERE cliente_id = 1")) {
 
              while (rs.next()) {
                  String cuenta = rs.getString("cuenta_id");
@@ -151,12 +203,75 @@ public class TransferCuenta {
 
     }
 
-    private void cargarSaldoCuenta(String cuenta) {
+      private void cargarCuentasDeCliente(int cliente_id) {
+          comboBox1.removeAllItems();
+          comboBox2.removeAllItems();
+
+          List<String> cuentas = new ArrayList<>();
+          String query = "SELECT numero_cuenta FROM cuenta WHERE cliente_id = ?";
+          try (Connection conn = DBConnection.getConnection();
+               PreparedStatement ps = conn.prepareStatement(query)) {
+
+              ps.setInt(1, cliente_id);
+              ResultSet rs = ps.executeQuery();
+              while (rs.next()) {
+                  cuentas.add(rs.getString("numero_cuenta"));
+              }
+
+          } catch (SQLException e) {
+              JOptionPane.showMessageDialog(null, "Error cargando cuentas: " + e.getMessage());
+              return;
+          }
+
+          if (cuentas.size() < 2) {
+              JOptionPane.showMessageDialog(null, "Debe tener al menos 2 cuentas para esta transferencia.");
+              return;
+          }
+
+          for (String cuenta : cuentas) {
+              comboBox1.addItem(cuenta);
+          }
+
+          comboBox1.addActionListener(e -> {
+              String seleccionada = (String) comboBox1.getSelectedItem();
+              comboBox2.removeAllItems();
+              for (String cuenta : cuentas) {
+                  if (!cuenta.equals(seleccionada)) {
+                      comboBox2.addItem(cuenta);
+                  }
+              }
+              if (seleccionada != null) {
+                  cargarSaldoCuenta(seleccionada);
+              }
+          });
+      }
+
+      private void cargarSaldoCuenta(String numeroCuenta) {
+          String query = "SELECT saldo FROM cuenta WHERE numero_cuenta = ?";
+      
+          try (Connection conn = DBConnection.getConnection();
+               PreparedStatement ps = conn.prepareStatement(query)) {
+      
+              ps.setString(1, numeroCuenta);
+              ResultSet rs = ps.executeQuery();
+      
+              if (rs.next()) {
+                  double saldo = rs.getDouble("saldo");
+                  saldorigen.setText(String.format("%.2f", saldo));
+              } else {
+                  saldorigen.setText("0.00");
+              }
+      
+          } catch (SQLException e) {
+              JOptionPane.showMessageDialog(null, "Error cargando saldo: " + e.getMessage());
+          }
+      }
+    private void cargarSaldoCuenta(int cuenta_id ) {
         // TODO: conecta a BD y consulta saldo de la cuenta para mostrar
 
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT saldo FROM Cuentas WHERE cuenta_id = ?")) {
-            ps.setString(1, cuenta);
+             PreparedStatement ps = conn.prepareStatement("SELECT saldo FROM Cuenta WHERE cliente_id = ?" )) {
+            ps.setInt(1,Integer.parseInt(String.valueOf(cuenta_id)));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     double saldo = rs.getDouble("saldo");
@@ -184,7 +299,7 @@ public class TransferCuenta {
             return;
         }
 
-        try (Connection conn = DriverManager.getConnection("jdbc:tu_driver:tu_bd_url", "usuario", "password");
+        try (Connection conn = DBConnection.getConnection();
              CallableStatement cs = conn.prepareCall(spName)) {
 
             cs.setString(1, cuentaOrigen);

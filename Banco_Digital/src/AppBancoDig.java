@@ -17,7 +17,7 @@ public static void main(String[] args) {
 }*/
 public static void main(String[] args) {
     JFrame frame = new JFrame("Transferencia");
-    TransferCuenta tc = new TransferCuenta();
+    TransferCuenta tc = new TransferCuenta(1);
     frame.setContentPane(tc.getTRANFER());
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.pack();
