@@ -23,6 +23,7 @@ public class TransferCuenta {
     private int cliente_id;// Número cuenta destino
     private JButton enviarBoton;
     private JLabel saldd;
+    private JButton inicioButton;
     private String nombreuser;
 
     private void createUIComponents() {
@@ -192,6 +193,7 @@ public class TransferCuenta {
 
         List<String> cuentas = new ArrayList<>();
         String query = "SELECT numero_cuenta FROM cuenta WHERE cliente_id = ?";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
@@ -206,28 +208,58 @@ public class TransferCuenta {
             return;
         }
 
-        if (cuentas.size() < 2) {
-            JOptionPane.showMessageDialog(null, "Debe tener al menos 2 cuentas para esta transferencia.");
+        if (cuentas.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No tiene cuentas activas.");
             return;
         }
 
+        // Agregar todas las cuentas al comboBox1 (origen)
         for (String cuenta : cuentas) {
             comboBox1.addItem(cuenta);
         }
 
+        // 👇 Forzar selección y carga de saldo si solo hay una cuenta
+        if (comboBox1.getItemCount() == 1) {
+            comboBox1.setSelectedIndex(0);  // Forzar selección
+            cargarSaldoCuenta((String) comboBox1.getSelectedItem());  // Mostrar saldo
+        }
+
+        // Si hay más de una cuenta, habilitar destino y cargar saldo según selección
         comboBox1.addActionListener(e -> {
             String seleccionada = (String) comboBox1.getSelectedItem();
+
+            // Limpiar comboBox2 y cargar solo si hay más de una cuenta
             comboBox2.removeAllItems();
             for (String cuenta : cuentas) {
                 if (!cuenta.equals(seleccionada)) {
                     comboBox2.addItem(cuenta);
                 }
             }
+
+            // Cargar saldo cuenta origen
             if (seleccionada != null) {
                 cargarSaldoCuenta(seleccionada);
             }
         });
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private void cargarSaldoCuenta(String numeroCuenta) {
         String query = "SELECT saldo FROM cuenta WHERE numero_cuenta = ?";

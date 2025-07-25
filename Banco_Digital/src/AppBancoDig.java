@@ -1,4 +1,5 @@
 import javax.swing.*;
+public class AppBancoDig {
 /*
 public static void main(String[] args) {
     // Para lanzar el formulario de insert y edicion , elim
@@ -15,12 +16,25 @@ public static void main(String[] args) {
         rc.cargarClientsData();
     });
 }*/
+/*
 public static void main(String[] args) {
     JFrame frame = new JFrame("Transferencia");
-    TransferCuenta tc = new TransferCuenta(1,"Juan Perez");
+    TransferCuenta tc = new TransferCuenta(1,"Juan Perez");//prametro cliente_id , nombre
     frame.setContentPane(tc.getTRANFER());
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.pack();
     frame.setLocationRelativeTo(null);
     frame.setVisible(true);
+}*/
+// Ventana Principal
+public static void main(String[] args) {
+    SwingUtilities.invokeLater(() -> {
+        // Simula cliente logueado con ID 1 y nombre "Kevin"
+        PantallaPrincipal ventana = new PantallaPrincipal(1);//prametro cliente_id , nombre
+        ventana.setVisible(true);
+        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        ventana.pack();
+        ventana.setLocationRelativeTo(null);
+    });
+}
 }
