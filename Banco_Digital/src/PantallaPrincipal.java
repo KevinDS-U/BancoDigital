@@ -50,6 +50,19 @@ public class PantallaPrincipal extends JFrame {
                 frame.setVisible(true);
             }
         });
+
+        Historial.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                HistorialTransacciones ht = new HistorialTransacciones(cliente_Id);
+                JFrame frame = new JFrame("Historial de Transacciones"); // Crea un nuevo frame para mostrar la pantalla
+                frame.setContentPane(ht.getFondo());
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                frame.pack();
+                frame.setLocationRelativeTo(null); // centrar
+                frame.setVisible(true);
+            }
+        });
     }
 
     private void cargarDatosCuenta(int clienteId) {
