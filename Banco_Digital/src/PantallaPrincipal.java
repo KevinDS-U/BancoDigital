@@ -37,13 +37,16 @@ public class PantallaPrincipal extends JFrame {
         Transa.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Crear y mostrar la nueva ventana de transferencia
-                TransferCuenta tc = new TransferCuenta(cliente_Id, "Juan Perez"); // Puedes cambiar el nombre dinámicamente si quieres
+                String nombreUsuario = "Juan Perez";
+                JFrame ventanaActual = (JFrame) SwingUtilities.getWindowAncestor(Pricipal0);
+                ventanaActual.setVisible(false);  // Oculta la ventana principal
+
+                TransferCuenta tc = new TransferCuenta(cliente_Id, nombreUsuario, ventanaActual); // PASAR la ventana
                 JFrame frame = new JFrame("Transferencia");
                 frame.setContentPane(tc.getTRANFER());
-                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Solo cerrar esta ventana
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 frame.pack();
-                frame.setLocationRelativeTo(null); // Centrar ventana
+                frame.setLocationRelativeTo(null);
                 frame.setVisible(true);
             }
         });

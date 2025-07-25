@@ -25,14 +25,14 @@ public class TransferCuenta {
     private JLabel saldd;
     private JButton inicioButton;
     private String nombreuser;
-
+    JFrame pantallaPrincipal;
     private void createUIComponents() {
         saldorigen = new JTextField();
         saldorigen.setEditable(false);  // Ejemplo: solo lectura
         saldorigen.setBackground(new java.awt.Color(240, 240, 240)); // Color claro
     }
 
-    public TransferCuenta(int cliente_id , String nombreuser) {
+    public TransferCuenta(int cliente_id , String nombreuser,JFrame pantallaPrincipal) {
         this.cliente_id = cliente_id;
         this.nombreuser=nombreuser;
         cargarCuentasDeCliente(cliente_id);      // Implementa conexión y carga real
@@ -109,6 +109,17 @@ public class TransferCuenta {
                 ejecutarTransferencia(tipo, cuentaOrigen, cuentaDestino, numCuentaDestino, montoTrans);
             }
         });
+
+            inicioButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Cierra esta ventana
+                    SwingUtilities.getWindowAncestor(TRANFER).dispose();
+
+                    // Vuelve a mostrar la ventana principal que estaba oculta
+                    pantallaPrincipal.setVisible(true);
+                }
+            });
     }
 
     private void mostrarCamposIniciales() {
@@ -241,6 +252,7 @@ public class TransferCuenta {
                 cargarSaldoCuenta(seleccionada);
             }
         });
+
     }
 
 
