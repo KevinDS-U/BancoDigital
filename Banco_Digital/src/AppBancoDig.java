@@ -27,6 +27,7 @@ public static void main(String[] args) {
     frame.setVisible(true);
 }*/
 // Ventana Principal
+/*
 public static void main(String[] args) {
     SwingUtilities.invokeLater(() -> {
         // Simula cliente logueado con ID 1 y nombre "Kevin"
@@ -37,4 +38,20 @@ public static void main(String[] args) {
         ventana.setLocationRelativeTo(null);
     });
 }
+}*/
+public static void main(String[] args) {
+    SwingUtilities.invokeLater(new Runnable() {
+        @Override
+        public void run() {
+            JFrame frame = new JFrame("Registro de Usuario");
+            CrearUsuario crearUsuario = new CrearUsuario();
+            frame.setContentPane(crearUsuario.getPformularioinicio());
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        }
+    });
 }
+}
+
