@@ -10,6 +10,8 @@ public class RegistroClientes {
     private JTextField textField3;
     private JTextField textField4;
     private JTextField textField5;
+    private JTextField textFieldUsuario;
+    private JPasswordField textFieldContrasena;
     private JButton eliminarButton;
     private JButton ACTUALIZARButton;
     private JButton INSERTARButton;
@@ -95,7 +97,7 @@ public class RegistroClientes {
     }
 
     // Inserta un nuevo cliente en la base de datos
-    private void insertarCliente() {
+    void insertarCliente() {
         String nombre = textField1.getText();
         String correo = textField2.getText();
         String direccion = textField3.getText();
@@ -120,8 +122,25 @@ public class RegistroClientes {
                 limpiarCampos();
             }
 
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Error al insertar cliente: " + ex.getMessage());
+            // 🔐 Insertar en la tabla Cuentas para el login
+            String username = textFieldUsuario.getText();
+            String password = new String(textFieldContrasena.getPassword());
+            String passwordHash = HashUtil.hashPassword(password);
+
+            String sqlCuenta = "INSERT INTO Cuentas (username, password_hash) VALUES (?, ?)";
+
+            try (PreparedStatement psCuenta = conn.prepareStatement(sqlCuenta)) {
+                psCuenta.setString(1, username);
+                psCuenta.setString(2, passwordHash);
+                psCuenta.executeUpdate();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error al crear cuenta: " + ex.getMessage());
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error al insertar cliente: " + e.getMessage());
         }
     }
 
