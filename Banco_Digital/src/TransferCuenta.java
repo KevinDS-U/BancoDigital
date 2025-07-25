@@ -303,9 +303,9 @@ public class TransferCuenta {
    
        // Determina el nombre del SP según tipo
        if ("Entre mis Cuentas".equals(tipoTrans)) {
-           spName = "{call sp_TransferenciaInterna(?, ?, ?, ?, ?)}";
+           spName = "{call sp_TransferenciaInterna( ?, ?, ?)}";
        } else if ("A Terceros".equals(tipoTrans)) {
-           spName = "{call sp_TransferenciaExterna(?, ?, ?, ?, ?)}";
+           spName = "{call sp_TransferenciaExterna(?, ?, ? )}";
        } else {
            JOptionPane.showMessageDialog(null, "Seleccione un tipo válido de transferencia.");
            return;
@@ -335,11 +335,11 @@ public class TransferCuenta {
            }
    
            // Enviar parámetros al SP
-           cs.setString(1, tipoTrans);  // "Entre mis Cuentas" o "A Terceros"
-           cs.setInt(2, cuentaIdOrigen);
-           cs.setInt(3, cuentaIdDestino);
-           cs.setBigDecimal(4, BigDecimal.valueOf(monto));
-           cs.setString(5, descripcion);
+           // "Entre mis Cuentas" o "A Terceros"
+           cs.setInt(1, cuentaIdOrigen);
+           cs.setInt(2, cuentaIdDestino);
+           cs.setBigDecimal(3, BigDecimal.valueOf(monto));
+          
 
                     cs.execute();
                     JOptionPane.showMessageDialog(null, "Transferencia realizada correctamente.");
